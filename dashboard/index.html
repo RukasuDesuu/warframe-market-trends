@@ -1,0 +1,843 @@
+<meta name="dash-one-writer">
+<style>
+  .wm { display: grid; gap: var(--cds-gap-xl); font-family: var(--font-anthropic-sans); color: var(--color-fg); min-width: 0; }
+  .wm-cab { display: grid; gap: var(--cds-gap-xs); }
+  .wm-titulo { margin: 0; font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); text-wrap: balance; }
+  .wm-lead { margin: 0; max-width: 46rem; font-size: var(--cds-font-size-body); line-height: 1.5; color: var(--color-fg-muted); }
+  .wm-lead .wm-num { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  .wm-filtros { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); align-items: end; }
+  .wm-filtro { display: grid; gap: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); min-width: 0; }
+  .wm-filtro select, .wm-busca { font: inherit; font-size: var(--cds-font-size-body); color: var(--color-fg); background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); max-width: 100%; }
+  .wm-periodo { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); padding-block: var(--cds-pad-xs); }
+
+  .wm-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr)); gap: var(--cds-gap-md); }
+  .wm-tile, .wm-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+  .wm-tile { display: grid; gap: var(--cds-gap-xs); align-content: start; }
+  .wm-tile-rot, .wm-tile-nota, .wm-tile-val { margin: 0; }
+  .wm-tile-rot { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .wm-tile-val { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); line-height: 1.15; }
+  .wm-tile-nota { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.4; }
+  .wm-tile-nota .wm-num { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+
+  .wm-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+  .wm-card { display: grid; gap: var(--cds-gap-sm); align-content: start; }
+  .wm-card-titulo { margin: 0; font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+  .wm-nota { margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.45; max-width: 60ch; }
+  .wm-leg { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); margin: 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .wm-leg-item { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+  .wm-chave { display: inline-block; width: 1rem; height: 2px; border-radius: 1px; background: var(--cds-chart-muted); }
+
+  .wm-chart { position: relative; min-width: 0; }
+  .wm-altura-g { min-height: 260px; }
+  .wm-altura-m { min-height: 120px; }
+  .wm-svg { display: block; touch-action: pan-y; }
+  .wm-svg:focus-visible { outline: 2px solid var(--color-fg-muted); outline-offset: 2px; border-radius: var(--cds-radius); }
+  .wm-eixo { fill: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .wm-fim { fill: var(--color-fg); font-size: var(--cds-font-size-caption); font-weight: var(--cds-font-weight-medium); font-variant-numeric: tabular-nums; }
+  .wm-tip { position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); white-space: nowrap; }
+  .wm-tip-data { color: var(--cds-text-secondary); }
+  .wm-tip-linha { display: flex; justify-content: space-between; gap: var(--cds-gap-md); font-variant-numeric: tabular-nums; }
+  .wm-tip-linha span { color: var(--cds-text-secondary); }
+  .wm-falha { display: flex; align-items: center; justify-content: center; gap: var(--cds-gap-xs); min-height: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .wm-falha::before { content: ""; width: .375rem; height: .375rem; border-radius: 50%; background: var(--color-bad); }
+
+  .wm-movs { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; min-height: 13rem; }
+  .wm-mov-btn { all: unset; box-sizing: border-box; display: grid; grid-template-columns: minmax(0, 11rem) minmax(2rem, 1fr) 4rem 3.5rem; gap: var(--cds-gap-sm); align-items: center; width: 100%; padding: var(--cds-pad-xs); border-radius: var(--cds-radius); cursor: pointer; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .wm-mov-btn:hover { background: var(--cds-surface-popover); }
+  .wm-mov-btn:focus-visible { outline: 2px solid var(--color-fg-muted); }
+  .wm-mov-nome { overflow-wrap: anywhere; }
+  .wm-mov-trilha { display: block; height: .5rem; }
+  .wm-mov-barra { display: block; height: 100%; border-radius: 2px; min-width: 2px; }
+  .wm-mov-val { text-align: right; font-weight: var(--cds-font-weight-medium); }
+  .wm-mov-preco { text-align: right; color: var(--color-fg-muted); }
+
+  .wm-item-cab { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--cds-gap-md); align-items: end; }
+  .wm-item-cab > div { display: grid; gap: var(--cds-gap-xs); min-width: 0; }
+  .wm-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr)); gap: var(--cds-gap-md); margin: 0; }
+  .wm-stat { display: grid; gap: 2px; min-width: 0; }
+  .wm-stat dt { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .wm-stat dd { margin: 0; font-size: var(--cds-font-size-heading); }
+
+  .wm-busca { width: min(100%, 18rem); }
+  .wm-caixa { container-type: inline-size; max-height: 34rem; overflow: auto; }
+  .wm-tabela { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .wm-tabela th { position: sticky; top: 0; z-index: 1; background: var(--color-panel); text-align: right; font-weight: var(--cds-font-weight-medium); white-space: nowrap; border-bottom: 1px solid var(--color-border-line); padding: 0; }
+  .wm-tabela td { text-align: right; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--cds-chart-grid); white-space: nowrap; }
+  .wm-tabela .wm-esq { text-align: left; }
+  .wm-tabela td.wm-esq:first-child { white-space: normal; min-width: 9rem; }
+  .wm-ord { all: unset; box-sizing: border-box; display: block; width: 100%; padding: var(--cds-pad-xs) var(--cds-pad-sm); cursor: pointer; color: var(--color-fg-muted); }
+  .wm-ord:hover, th[aria-sort] .wm-ord { color: var(--color-fg); }
+  .wm-ord:focus-visible { outline: 2px solid var(--color-fg-muted); outline-offset: -2px; }
+  th[aria-sort="descending"] .wm-ord::after { content: " ↓"; }
+  th[aria-sort="ascending"] .wm-ord::after { content: " ↑"; }
+  .wm-link { all: unset; cursor: pointer; text-decoration: underline; text-decoration-color: var(--color-border-line); text-underline-offset: 2px; }
+  .wm-link:hover { text-decoration-color: currentColor; }
+  .wm-link:focus-visible { outline: 2px solid var(--color-fg-muted); }
+  .wm-faisca { display: inline-block; vertical-align: middle; }
+  .wm-pill { display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+  .wm-pill::before { font-size: .7em; color: var(--wm-cor, var(--color-fg-muted)); }
+  .wm-pill[data-t="Alta"]::before { content: "▲"; }
+  .wm-pill[data-t="Queda"]::before { content: "▼"; }
+  .wm-pill[data-t="Estável"]::before { content: "●"; }
+  .wm-pill[data-t="Pouco negociado"] { color: var(--color-fg-muted); }
+  .wm-pill[data-t="Pouco negociado"]::before { content: "○"; }
+  @container (max-width: 44rem) { .wm-sec { display: none; } }
+
+  .wm-gloss { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: var(--cds-gap-md) var(--cds-gap-xl); margin: 0; }
+  .wm-gloss dt { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); }
+  .wm-gloss dd { margin: 2px 0 0; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+  .wm-sinais { display: grid; gap: var(--cds-gap-xs); margin: 0; padding: 0; list-style: none; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); line-height: 1.5; }
+  .wm-sinais b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+  [data-dash-source-state=empty] { color: transparent; }
+  [data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="wm">
+  <header class="wm-cab" id="topo">
+    <h1 class="wm-titulo">Tendências do Warframe Market</h1>
+    <p class="wm-lead">Nos últimos 30 dias, o preço típico em <span class="wm-num" data-draw="lead-cat">—</span> variou <span class="wm-num" data-draw="lead-preco" data-source="kpis" data-field="indice_var30">—</span> e as vendas variaram <span class="wm-num" data-draw="lead-vendas" data-source="kpis" data-field="vendas_var">—</span>. <span class="wm-num" data-draw="lead-altas" data-source="kpis" data-field="altas">—</span> itens estão em alta e <span class="wm-num" data-draw="lead-quedas" data-source="kpis" data-field="quedas">—</span> em queda.</p>
+  </header>
+
+  <div class="wm-filtros" id="filtros">
+    <label class="wm-filtro">Categoria
+      <select id="f-categoria" data-draw="categoria" data-source="kpis"></select>
+    </label>
+    <p class="wm-periodo">Conjuntos (sets) no PC, preços em platina. Período: <span data-draw="periodo" data-source="mercado">—</span>.</p>
+  </div>
+
+  <section class="wm-tiles" id="numeros" aria-label="Números principais">
+    <div class="wm-tile" id="tile-indice">
+      <p class="wm-tile-rot">Índice de preços</p>
+      <p class="wm-tile-val" data-draw="t-indice" data-source="kpis" data-field="indice">—</p>
+      <p class="wm-tile-nota"><span class="wm-num" data-draw="t-indice-var" data-source="kpis" data-field="indice_var30">—</span> em 30 dias. O início do período vale 100.</p>
+    </div>
+    <div class="wm-tile" id="tile-vendas">
+      <p class="wm-tile-rot">Vendas nos últimos 30 dias</p>
+      <p class="wm-tile-val" data-draw="t-vendas" data-source="kpis" data-field="vendas30">—</p>
+      <p class="wm-tile-nota"><span class="wm-num" data-draw="t-vendas-var" data-source="kpis" data-field="vendas_var">—</span> sobre os 30 dias anteriores</p>
+    </div>
+    <div class="wm-tile" id="tile-platina">
+      <p class="wm-tile-rot">Platina movimentada em 30 dias</p>
+      <p class="wm-tile-val" data-draw="t-platina" data-source="kpis" data-field="platina30">—</p>
+      <p class="wm-tile-nota"><span class="wm-num" data-draw="t-platina-var" data-source="kpis" data-field="platina_var">—</span> sobre os 30 dias anteriores</p>
+    </div>
+    <div class="wm-tile" id="tile-itens">
+      <p class="wm-tile-rot">Itens com tendência de alta em 30 dias</p>
+      <p class="wm-tile-val" data-draw="t-altas" data-source="kpis" data-field="altas">—</p>
+      <p class="wm-tile-nota"><span class="wm-num" data-draw="t-quedas" data-source="kpis" data-field="quedas">—</span> em queda, <span class="wm-num" data-draw="t-estaveis" data-source="kpis" data-field="estaveis">—</span> estáveis, <span class="wm-num" data-draw="t-pouco" data-source="kpis" data-field="pouco">—</span> pouco negociados</p>
+    </div>
+  </section>
+
+  <section class="wm-grade" id="panorama" aria-label="Panorama do mercado">
+    <article class="wm-card" id="card-indice">
+      <h2 class="wm-card-titulo">Como os preços andaram</h2>
+      <p class="wm-nota">Índice do item típico. Em 95, o item típico está 5% mais barato que no início do período.</p>
+      <p class="wm-leg">
+        <span class="wm-leg-item"><span class="wm-chave" data-wm-cor="0"></span><span data-draw="leg-cat">—</span></span>
+        <span class="wm-leg-item"><span class="wm-chave"></span>Outras categorias</span>
+      </p>
+      <div class="wm-chart wm-altura-g dash-skeleton" id="g-indice" data-draw="g-indice" data-source="mercado"></div>
+    </article>
+    <article class="wm-card" id="card-vendas">
+      <h2 class="wm-card-titulo">Vendas por dia</h2>
+      <p class="wm-nota">Unidades vendidas e registradas no site, somando os conjuntos da categoria.</p>
+      <div class="wm-chart wm-altura-g dash-skeleton" id="g-vendas" data-draw="g-vendas" data-source="mercado"></div>
+    </article>
+  </section>
+
+  <section class="wm-grade" id="movimentos" aria-label="Maiores altas e quedas">
+    <article class="wm-card" id="card-altas">
+      <h2 class="wm-card-titulo">Maiores altas em 30 dias</h2>
+      <p class="wm-nota">Só entram itens com pelo menos <span data-draw="minimo" data-source="kpis" data-field="minimo">—</span> vendas no mês. Clique para ver o item.</p>
+      <ul class="wm-movs" id="lista-altas" data-draw="altas" data-source="resumo"></ul>
+    </article>
+    <article class="wm-card" id="card-quedas">
+      <h2 class="wm-card-titulo">Maiores quedas em 30 dias</h2>
+      <p class="wm-nota">Mesma escala e mesmo critério da lista de altas.</p>
+      <ul class="wm-movs" id="lista-quedas" data-draw="quedas" data-source="resumo"></ul>
+    </article>
+  </section>
+
+  <section class="wm-card" id="item">
+    <div class="wm-item-cab">
+      <div>
+        <h2 class="wm-card-titulo">Detalhe do item</h2>
+        <p class="wm-nota">Linha: preço mediano do dia. Faixa: menor e maior preço do dia.</p>
+      </div>
+      <label class="wm-filtro">Item
+        <select id="f-item" data-draw="item-sel" data-source="resumo"></select>
+      </label>
+    </div>
+    <dl class="wm-stats">
+      <div class="wm-stat"><dt>Preço atual</dt><dd data-draw="i-preco" data-source="resumo" data-field="preco">—</dd></div>
+      <div class="wm-stat"><dt>7 dias</dt><dd data-draw="i-var7" data-source="resumo" data-field="var7">—</dd></div>
+      <div class="wm-stat"><dt>30 dias</dt><dd data-draw="i-var30" data-source="resumo" data-field="var30">—</dd></div>
+      <div class="wm-stat"><dt>Desde o início</dt><dd data-draw="i-var90" data-source="resumo" data-field="var90">—</dd></div>
+      <div class="wm-stat"><dt>Vendas em 30 dias</dt><dd data-draw="i-vendas" data-source="resumo" data-field="vendas30">—</dd></div>
+      <div class="wm-stat"><dt>Melhor venda</dt><dd data-draw="i-venda" data-source="resumo" data-field="melhor_venda">—</dd></div>
+      <div class="wm-stat"><dt>Melhor compra</dt><dd data-draw="i-compra" data-source="resumo" data-field="melhor_compra">—</dd></div>
+      <div class="wm-stat"><dt>Spread</dt><dd data-draw="i-spread" data-source="resumo" data-field="spread">—</dd></div>
+    </dl>
+    <div class="wm-chart wm-altura-g dash-skeleton" id="g-item" data-draw="g-item" data-source="historico"></div>
+    <p class="wm-nota">Vendas por dia deste item</p>
+    <div class="wm-chart wm-altura-m dash-skeleton" id="g-item-vendas" data-draw="g-item-vendas" data-source="historico"></div>
+  </section>
+
+  <section class="wm-card" id="todos">
+    <div class="wm-item-cab">
+      <div>
+        <h2 class="wm-card-titulo">Todos os itens</h2>
+        <p class="wm-nota">Clique no título de uma coluna para ordenar e no nome para abrir o detalhe.</p>
+      </div>
+      <input class="wm-busca" id="busca" type="search" placeholder="Buscar item" aria-label="Buscar item">
+    </div>
+    <div class="wm-caixa">
+      <table class="wm-tabela" id="tab-itens" data-source="resumo" data-row-key="slug">
+        <thead>
+          <tr>
+            <th class="wm-esq" scope="col" data-field="nome"><button class="wm-ord" type="button" data-col="nome">Item</button></th>
+            <th class="wm-esq" scope="col" data-field="tendencia"><button class="wm-ord" type="button" data-col="tendencia">Tendência</button></th>
+            <th scope="col" data-field="preco"><button class="wm-ord" type="button" data-col="preco">Preço</button></th>
+            <th class="wm-sec" scope="col" data-field="var7"><button class="wm-ord" type="button" data-col="var7">7 dias</button></th>
+            <th scope="col" data-field="var30"><button class="wm-ord" type="button" data-col="var30">30 dias</button></th>
+            <th class="wm-sec" scope="col" data-field="var90"><button class="wm-ord" type="button" data-col="var90">Início</button></th>
+            <th scope="col" data-field="vendas30" aria-sort="descending"><button class="wm-ord" type="button" data-col="vendas30">Vendas 30d</button></th>
+            <th class="wm-sec" scope="col" data-field="melhor_venda"><button class="wm-ord" type="button" data-col="melhor_venda">Melhor venda</button></th>
+            <th class="wm-sec" scope="col" data-field="melhor_compra"><button class="wm-ord" type="button" data-col="melhor_compra">Melhor compra</button></th>
+            <th class="wm-sec" scope="col" data-field="spread"><button class="wm-ord" type="button" data-col="spread">Spread</button></th>
+            <th class="wm-sec" scope="col"><span class="wm-ord">90 dias</span></th>
+          </tr>
+        </thead>
+        <tbody data-draw="tabela"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="wm-card" id="como-ler">
+    <h2 class="wm-card-titulo">Como ler estes números</h2>
+    <dl class="wm-gloss">
+      <div><dt>Platina (p)</dt><dd>A moeda premium do jogo. Todos os preços aqui estão nela.</dd></div>
+      <div><dt>Mediana</dt><dd>O preço do meio entre as vendas do dia: metade saiu mais barato, metade mais caro. Uma venda fora da curva quase não a altera.</dd></div>
+      <div><dt>Preço atual</dt><dd>Média das medianas dos últimos 7 dias, com mais peso nos dias com mais vendas.</dd></div>
+      <div><dt>Variação</dt><dd>O preço atual comparado à mesma média de 7 dias, calculada há 7 dias, há 30 dias ou no início do período.</dd></div>
+      <div><dt>Índice de preços</dt><dd>Mostra o que aconteceu com o item típico. Usa a mediana entre os itens, então um item caro não pesa mais que um barato.</dd></div>
+      <div><dt>Vendas</dt><dd>Unidades vendidas e registradas no site. O que foi vendido sem registro não entra, então o mercado real pode ser maior.</dd></div>
+      <div><dt>Melhor venda e melhor compra</dt><dd>O anúncio de venda mais barato e a oferta de compra mais alta de usuários online, no momento da coleta.</dd></div>
+      <div><dt>Spread</dt><dd>A distância entre essas duas ofertas, em % do preço de venda. Quanto maior, mais difícil vender rápido perto do preço anunciado. Se ficar negativo, alguém está oferecendo mais do que o anúncio mais barato.</dd></div>
+      <div><dt>Registros excluídos</dt><dd><span data-draw="excl-qtd" data-source="excluidos" data-field="registros" data-row="0">—</span> dias ficaram fora de todas as contas por terem preço dez vezes acima do típico do item ou vendas vinte vezes acima. Afetou: <span data-draw="excl-itens" data-source="excluidos" data-field="itens" data-row="0">—</span>. São sinais de vendas falsas, que distorceriam os totais.</dd></div>
+      <div><dt>Tendência</dt><dd>Alta ou Queda quando a variação em 30 dias passa de <span data-draw="limite" data-source="kpis" data-field="limite_pct">—</span>%. Com menos de <span data-draw="minimo" data-source="kpis" data-field="minimo">—</span> vendas no mês, o item aparece como Pouco negociado, porque poucas vendas mudam muito a média.</dd></div>
+    </dl>
+    <h3 class="wm-card-titulo" id="sinais">Como interpretar preço e vendas juntos</h3>
+    <ul class="wm-sinais">
+      <li><b>Preço e vendas subindo:</b> mais gente comprando, a alta tem sustentação.</li>
+      <li><b>Preço subindo e vendas caindo:</b> a alta é mais frágil, poucos negócios estão puxando o preço.</li>
+      <li><b>Preço caindo e vendas subindo:</b> sinal de mais oferta entrando no mercado.</li>
+      <li><b>Preço e vendas caindo:</b> o interesse pelo item está diminuindo.</li>
+      <li><b>Item barato com variação grande:</b> confira o preço. Em itens baratos, poucas platinas já viram uma porcentagem alta.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+  dash.calc('resumo', {
+    title: 'Resumo por item',
+    description: 'Preço atual (média de 7 dias ponderada por vendas), variações, vendas em 30 dias, spread e tendência de cada item.',
+    inputs: ['historico', 'itens'],
+    fn: (historico, itens) => {
+      const LIMITE = 0.05, MINIMO = 30;
+      const dias = [...new Set(historico.map((r) => r.dia))].sort();
+      const fim = dias.length;
+      const pos = new Map(dias.map((d, i) => [d, i]));
+      const porItem = new Map();
+      for (const r of historico) {
+        if (r.suspeito === 'sim') continue;
+        if (!porItem.has(r.slug)) porItem.set(r.slug, []);
+        porItem.get(r.slug).push({ i: pos.get(r.dia), v: Number(r.vendas), p: Number(r.mediana) });
+      }
+      const soma = (rs, de, ate, f) => rs.filter((r) => r.i >= de && r.i < ate).reduce((t, r) => t + f(r), 0);
+      const media = (rs, de, ate) => {
+        const v = soma(rs, de, ate, (r) => r.v);
+        return v ? soma(rs, de, ate, (r) => r.v * r.p) / v : null;
+      };
+      return itens.map((it) => {
+        const rs = porItem.get(it.slug) ?? [];
+        const preco = media(rs, fim - 7, fim);
+        const variacao = (de, ate) => {
+          const base = media(rs, de, ate);
+          return preco && base ? preco / base - 1 : null;
+        };
+        const var30 = variacao(fim - 37, fim - 30);
+        const vendas30 = soma(rs, fim - 30, fim, (r) => r.v);
+        const venda = Number(it.melhor_venda) || null;
+        const compra = Number(it.melhor_compra) || null;
+        const tendencia = vendas30 < MINIMO || var30 == null ? 'Pouco negociado'
+          : var30 >= LIMITE ? 'Alta' : var30 <= -LIMITE ? 'Queda' : 'Estável';
+        return {
+          slug: it.slug, nome: it.nome, categoria: it.categoria, tendencia,
+          preco: preco == null ? null : Math.round(preco),
+          var7: variacao(fim - 14, fim - 7), var30, var90: variacao(0, 7),
+          vendas30, vendas30_ant: soma(rs, fim - 60, fim - 30, (r) => r.v),
+          melhor_venda: venda, melhor_compra: compra,
+          spread: venda && compra ? (venda - compra) / venda : null,
+          limite_pct: LIMITE * 100, minimo: MINIMO,
+        };
+      });
+    },
+  });
+
+  dash.calc('mercado', {
+    title: 'Mercado por dia',
+    description: 'Por dia e categoria: vendas, platina movimentada e índice de preços (mediana, entre os itens, do preço médio de 7 dias dividido pelo do início do período, vezes 100).',
+    inputs: ['historico', 'itens'],
+    fn: (historico, itens) => {
+      const cat = new Map(itens.map((i) => [i.slug, i.categoria]));
+      const dias = [...new Set(historico.map((r) => r.dia))].sort();
+      const pos = new Map(dias.map((d, i) => [d, i]));
+      const cats = ['Todas', ...new Set(itens.map((i) => i.categoria))];
+      const tab = new Map(cats.map((c) => [c, dias.map(() => ({ vendas: 0, platina: 0, razoes: [] }))]));
+      const series = new Map();
+      for (const r of historico) {
+        if (r.suspeito === 'sim') continue;
+        const i = pos.get(r.dia), v = Number(r.vendas);
+        if (!series.has(r.slug)) series.set(r.slug, dias.map(() => [0, 0]));
+        series.get(r.slug)[i] = [v, v * Number(r.mediana)];
+        for (const c of ['Todas', cat.get(r.slug)]) {
+          tab.get(c)[i].vendas += v;
+          tab.get(c)[i].platina += v * Number(r.media);
+        }
+      }
+      const media7 = (s, i) => {
+        const j = s.slice(i - 6, i + 1);
+        const v = j.reduce((t, d) => t + d[0], 0);
+        return v ? j.reduce((t, d) => t + d[1], 0) / v : null;
+      };
+      for (const [slug, s] of series) {
+        const base = media7(s, 6);
+        if (!base) continue;
+        for (let i = 6; i < dias.length; i++) {
+          const p = media7(s, i);
+          if (p) for (const c of ['Todas', cat.get(slug)]) tab.get(c)[i].razoes.push(p / base);
+        }
+      }
+      const mediana = (xs) => {
+        const o = [...xs].sort((a, b) => a - b), m = o.length >> 1;
+        return o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2;
+      };
+      return cats.flatMap((c) => tab.get(c).map((d, i) => ({
+        dia: dias[i], categoria: c,
+        indice: d.razoes.length ? Math.round(mediana(d.razoes) * 1000) / 10 : null,
+        vendas: d.vendas, platina: Math.round(d.platina),
+      })));
+    },
+  });
+
+  dash.calc('kpis', {
+    title: 'Números por categoria',
+    description: 'Índice atual e variação em 30 dias, vendas e platina dos últimos 30 dias contra os 30 anteriores, e contagem de itens por tendência.',
+    inputs: ['mercado', 'resumo'],
+    fn: (mercado, resumo) => {
+      const cats = [...new Set(mercado.map((r) => r.categoria))];
+      return cats.map((categoria) => {
+        const rs = mercado.filter((r) => r.categoria === categoria);
+        const fim = rs.length;
+        const soma = (de, ate, c) => rs.slice(de, ate).reduce((t, r) => t + r[c], 0);
+        const itens = categoria === 'Todas' ? resumo : resumo.filter((r) => r.categoria === categoria);
+        const conta = (t) => itens.filter((r) => r.tendencia === t).length;
+        const indice = rs[fim - 1].indice, antes = rs[fim - 31].indice;
+        const vendas30 = soma(fim - 30, fim, 'vendas'), vendasAnt = soma(fim - 60, fim - 30, 'vendas');
+        const platina30 = soma(fim - 30, fim, 'platina'), platinaAnt = soma(fim - 60, fim - 30, 'platina');
+        return {
+          categoria, indice,
+          indice_var30: indice && antes ? indice / antes - 1 : null,
+          vendas30, vendas_var: vendasAnt ? vendas30 / vendasAnt - 1 : null,
+          platina30, platina_var: platinaAnt ? platina30 / platinaAnt - 1 : null,
+          altas: conta('Alta'), quedas: conta('Queda'), estaveis: conta('Estável'), pouco: conta('Pouco negociado'),
+          limite_pct: resumo[0].limite_pct, minimo: resumo[0].minimo,
+        };
+      });
+    },
+  });
+
+  dash.calc('excluidos', {
+    title: 'Registros excluídos',
+    description: 'Dias marcados como suspeitos no histórico e os itens afetados. Eles ficam fora de todos os cálculos.',
+    inputs: ['historico', 'itens'],
+    fn: (historico, itens) => {
+      const nome = new Map(itens.map((i) => [i.slug, i.nome]));
+      const fora = historico.filter((r) => r.suspeito === 'sim');
+      return [{ registros: fora.length, itens: [...new Set(fora.map((r) => nome.get(r.slug)))].join(', ') }];
+    },
+  });
+
+  const n0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
+  const n1 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const compacto = new Intl.NumberFormat('pt-BR', { notation: 'compact', maximumFractionDigits: 1 });
+  const pctSinal = new Intl.NumberFormat('pt-BR', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1, signDisplay: 'exceptZero' });
+  const pctSimples = new Intl.NumberFormat('pt-BR', { style: 'percent', maximumFractionDigits: 0 });
+  const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const fmtDia = (d) => `${d.getUTCDate()} ${MESES[d.getUTCMonth()]}`;
+  const fmtDiaAno = (d) => `${fmtDia(d)} ${d.getUTCFullYear()}`;
+  const fmtPct = (v) => (v == null ? '—' : pctSinal.format(v));
+  const fmtInt = (v) => (v == null ? '—' : n0.format(v));
+  const fmtP = (v) => (v == null ? '—' : `${n0.format(v)} p`);
+  const fmtSpread = (v) => (v == null ? '—' : pctSimples.format(v));
+
+  const categoriaAtual = () => dash.params().categoria ?? 'Todas';
+  const kpi = () => {
+    const g = dash.data('kpis');
+    return g.status === 'ok' ? g.data.find((r) => r.categoria === categoriaAtual()) ?? null : null;
+  };
+  const daCategoria = (rows) => {
+    const c = categoriaAtual();
+    return c === 'Todas' ? rows : rows.filter((r) => r.categoria === c);
+  };
+  const itemAtual = () => {
+    const g = dash.data('resumo');
+    if (g.status !== 'ok') return null;
+    const escolhido = g.data.find((r) => r.slug === dash.params().item);
+    return escolhido ?? [...daCategoria(g.data)].sort((a, b) => b.vendas30 - a.vendas30)[0] ?? null;
+  };
+
+  let refHist = null, mapaHist = new Map();
+  const historicoDe = (slug) => {
+    const g = dash.data('historico');
+    if (g.status !== 'ok') return [];
+    if (refHist !== g.data) {
+      refHist = g.data;
+      mapaHist = new Map();
+      for (const r of g.data) {
+        if (r.suspeito === 'sim') continue;
+        if (!mapaHist.has(r.slug)) mapaHist.set(r.slug, []);
+        mapaHist.get(r.slug).push({ t: new Date(r.dia), y: Number(r.mediana), lo: Number(r.minimo), hi: Number(r.maximo), vendas: Number(r.vendas) });
+      }
+    }
+    return mapaHist.get(slug) ?? [];
+  };
+
+  const preparar = (el, ...ids) => {
+    const gs = ids.map((id) => dash.data(id));
+    const ok = gs.every((g) => g.status === 'ok');
+    const falhou = gs.some((g) => g.status === 'error');
+    el.classList.toggle('dash-skeleton', !ok && !falhou);
+    if (!ok) {
+      el.replaceChildren();
+      if (falhou) {
+        const f = document.createElement('div');
+        f.className = 'wm-falha';
+        f.textContent = 'Falha ao carregar';
+        el.append(f);
+      }
+    }
+    return ok;
+  };
+
+  const medir = (svg, textos, classe) => {
+    const t = svg.append('text').attr('class', classe);
+    let m = 0;
+    for (const s of textos) {
+      t.text(s);
+      m = Math.max(m, t.node().getComputedTextLength());
+    }
+    t.remove();
+    return m;
+  };
+
+  const novaDica = (el) => {
+    const t = document.createElement('div');
+    t.className = 'wm-tip';
+    t.hidden = true;
+    el.append(t);
+    return t;
+  };
+
+  const mostrarDica = (tip, el, px, titulo, linhas) => {
+    const h = document.createElement('div');
+    h.className = 'wm-tip-data';
+    h.textContent = titulo;
+    const rows = linhas.map(([rot, val]) => {
+      const r = document.createElement('div');
+      r.className = 'wm-tip-linha';
+      const s = document.createElement('span');
+      s.textContent = rot;
+      const v = document.createElement('strong');
+      v.textContent = val;
+      r.append(s, v);
+      return r;
+    });
+    tip.replaceChildren(h, ...rows);
+    tip.hidden = false;
+    const larg = tip.offsetWidth;
+    const x = px + 12 + larg > el.clientWidth ? px - larg - 12 : px + 12;
+    tip.style.transform = `translate(${Math.max(0, x)}px, 8px)`;
+  };
+
+  const interagir = (svg, area, xs, ao) => {
+    let i = null;
+    const ir = (novo) => { i = novo; ao(i); };
+    svg.append('rect')
+      .attr('x', area.x).attr('y', area.y).attr('width', area.w).attr('height', area.h)
+      .attr('fill', 'transparent')
+      .on('pointermove', (ev) => ir(d3.bisectCenter(xs, d3.pointer(ev)[0])))
+      .on('pointerleave', () => ir(null));
+    svg.attr('tabindex', 0)
+      .on('keydown', (ev) => {
+        if (ev.key !== 'ArrowLeft' && ev.key !== 'ArrowRight') return;
+        ev.preventDefault();
+        const passo = ev.key === 'ArrowRight' ? 1 : -1;
+        ir(Math.min(xs.length - 1, Math.max(0, (i ?? xs.length - 1) + passo)));
+      })
+      .on('blur', () => ir(null));
+  };
+
+  const eixoX = (svg, W, H, baixo, ticks, posicao) => {
+    const larg = ticks.map(fmtDia).map((s) => medir(svg, [s], 'wm-eixo'));
+    let fimAnterior = -Infinity;
+    ticks.forEach((t, j) => {
+      const x = Math.min(W - larg[j] / 2, Math.max(larg[j] / 2, posicao(t)));
+      if (x - larg[j] / 2 < fimAnterior + 8) return;
+      fimAnterior = x + larg[j] / 2;
+      svg.append('text').attr('class', 'wm-eixo').attr('x', x).attr('y', H - 4).attr('text-anchor', 'middle').text(fmtDia(t));
+    });
+    svg.append('line').attr('x1', 0).attr('x2', W).attr('y1', baixo + 0.5).attr('y2', baixo + 0.5).style('stroke', 'var(--cds-chart-axis)');
+  };
+
+  const eixoY = (svg, W, y, ticks, fmt, esquerda) => {
+    for (const t of ticks) {
+      svg.append('line').attr('x1', esquerda).attr('x2', W).attr('y1', y(t) + 0.5).attr('y2', y(t) + 0.5).style('stroke', 'var(--cds-chart-grid)');
+      svg.append('text').attr('class', 'wm-eixo').attr('x', esquerda - 8).attr('y', y(t)).attr('dy', '0.32em').attr('text-anchor', 'end').text(fmt(t));
+    }
+  };
+
+  const novoSvg = (el, W, H, rotulo) => {
+    el.replaceChildren();
+    return d3.select(el).append('svg').attr('class', 'wm-svg').attr('width', '100%')
+      .attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img').attr('aria-label', rotulo);
+  };
+
+  const grafLinha = (el, o) => {
+    const W = Math.max(el.clientWidth, 240), H = o.altura, baixo = H - 24, topo = 10;
+    const svg = novoSvg(el, W, H, o.rotulo);
+    const contexto = o.contexto ?? [];
+    const todos = [...o.pontos, ...contexto.flat()];
+    let lo = d3.min(todos, (p) => p.lo ?? p.y), hi = d3.max(todos, (p) => p.hi ?? p.y);
+    if (o.ref != null) { lo = Math.min(lo, o.ref); hi = Math.max(hi, o.ref); }
+    if (lo === hi) { lo -= 1; hi += 1; }
+    const y = d3.scaleLinear([lo, hi], [baixo, topo]).nice(4);
+    const ticks = y.ticks(4);
+    const esquerda = medir(svg, ticks.map(o.fmtY), 'wm-eixo') + 8;
+    const ultimo = o.pontos[o.pontos.length - 1];
+    const txtFim = o.fmtFim(ultimo.y);
+    const direita = medir(svg, [txtFim], 'wm-fim') + 14;
+    const x = d3.scaleUtc(d3.extent(o.pontos, (p) => p.t), [esquerda, W - direita]);
+    eixoY(svg, W - direita, y, ticks, o.fmtY, esquerda);
+    eixoX(svg, W, H, baixo, x.ticks(W < 440 ? 3 : 6), x);
+    if (o.ref != null) {
+      svg.append('line').attr('x1', esquerda).attr('x2', W - direita).attr('y1', y(o.ref)).attr('y2', y(o.ref))
+        .style('stroke', 'var(--cds-chart-reference)').attr('stroke-dasharray', '4 4');
+    }
+    const traco = d3.line().x((p) => x(p.t)).y((p) => y(p.y));
+    for (const serie of contexto) {
+      svg.append('path').attr('d', traco(serie)).attr('fill', 'none')
+        .style('stroke', 'var(--cds-chart-muted)').attr('stroke-width', 1.5).attr('stroke-linejoin', 'round');
+    }
+    const cor = dash.colors[0];
+    if (o.faixa) {
+      const faixa = d3.area().x((p) => x(p.t)).y0((p) => y(p.lo)).y1((p) => y(p.hi));
+      svg.append('path').attr('d', faixa(o.pontos)).style('fill', cor).attr('fill-opacity', 0.12);
+    }
+    svg.append('path').attr('d', traco(o.pontos)).attr('fill', 'none').style('stroke', cor)
+      .attr('stroke-width', 2).attr('stroke-linejoin', 'round').attr('stroke-linecap', 'round');
+    svg.append('circle').attr('cx', x(ultimo.t)).attr('cy', y(ultimo.y)).attr('r', 4).style('fill', cor)
+      .style('stroke', 'var(--color-panel)').attr('stroke-width', 2);
+    svg.append('text').attr('class', 'wm-fim').attr('x', x(ultimo.t) + 8).attr('y', y(ultimo.y)).attr('dy', '0.32em').text(txtFim);
+
+    const guia = svg.append('line').attr('y1', topo).attr('y2', baixo).style('stroke', 'var(--cds-chart-axis)').attr('visibility', 'hidden');
+    const ponto = svg.append('circle').attr('r', 4).style('fill', cor).style('stroke', 'var(--color-panel)').attr('stroke-width', 2).attr('visibility', 'hidden');
+    const tip = novaDica(el);
+    const xs = o.pontos.map((p) => x(p.t));
+    interagir(svg, { x: esquerda, y: topo, w: W - esquerda - direita, h: baixo - topo }, xs, (i) => {
+      const vis = i == null ? 'hidden' : 'visible';
+      guia.attr('visibility', vis);
+      ponto.attr('visibility', vis);
+      tip.hidden = i == null;
+      if (i == null) return;
+      const p = o.pontos[i];
+      guia.attr('x1', xs[i]).attr('x2', xs[i]);
+      ponto.attr('cx', xs[i]).attr('cy', y(p.y));
+      mostrarDica(tip, el, xs[i], fmtDiaAno(p.t), o.dica(p));
+    });
+  };
+
+  const grafBarras = (el, o) => {
+    const W = Math.max(el.clientWidth, 240), H = o.altura, baixo = H - 24, topo = 10;
+    const svg = novoSvg(el, W, H, o.rotulo);
+    const y = d3.scaleLinear([0, d3.max(o.pontos, (p) => p.y) || 1], [baixo, topo]).nice(3);
+    const ticks = y.ticks(3);
+    const esquerda = medir(svg, ticks.map(fmtInt), 'wm-eixo') + 8;
+    const x = d3.scaleBand(d3.range(o.pontos.length), [esquerda, W]).paddingInner(0.25);
+    eixoY(svg, W, y, ticks, fmtInt, esquerda);
+    const bw = Math.min(x.bandwidth(), 24);
+    const centro = (i) => x(i) + x.bandwidth() / 2;
+    const barras = svg.append('g').selectAll('rect').data(o.pontos).join('rect')
+      .attr('x', (p, i) => centro(i) - bw / 2).attr('y', (p) => y(p.y))
+      .attr('width', bw).attr('height', (p) => baixo - y(p.y)).attr('rx', Math.min(1.5, bw / 2))
+      .style('fill', dash.colors[0]);
+    const escalaT = d3.scaleUtc(d3.extent(o.pontos, (p) => p.t), [centro(0), centro(o.pontos.length - 1)]);
+    eixoX(svg, W, H, baixo, escalaT.ticks(W < 440 ? 3 : 6), escalaT);
+    const tip = novaDica(el);
+    const xs = o.pontos.map((p, i) => centro(i));
+    interagir(svg, { x: esquerda, y: topo, w: W - esquerda, h: baixo - topo }, xs, (i) => {
+      barras.attr('opacity', (p, j) => (i == null || i === j ? 1 : 0.45));
+      tip.hidden = i == null;
+      if (i != null) mostrarDica(tip, el, xs[i], fmtDiaAno(o.pontos[i].t), o.dica(o.pontos[i]));
+    });
+  };
+
+  const faisca = (rs) => {
+    const w = 84, h = 22;
+    const svg = d3.create('svg').attr('class', 'wm-faisca').attr('viewBox', `0 0 ${w} ${h}`).attr('width', w).attr('height', h).attr('aria-hidden', 'true');
+    if (rs.length < 2) return svg.node();
+    const x = d3.scaleUtc(d3.extent(rs, (r) => r.t), [2, w - 4]);
+    let [lo, hi] = d3.extent(rs, (r) => r.y);
+    if (lo === hi) { lo -= 1; hi += 1; }
+    const y = d3.scaleLinear([lo, hi], [h - 3, 3]);
+    svg.append('path').attr('d', d3.line().x((r) => x(r.t)).y((r) => y(r.y))(rs)).attr('fill', 'none')
+      .style('stroke', dash.colors[0]).attr('stroke-width', 1.5).attr('stroke-linejoin', 'round');
+    const u = rs[rs.length - 1];
+    svg.append('circle').attr('cx', x(u.t)).attr('cy', y(u.y)).attr('r', 2).style('fill', dash.colors[0]);
+    return svg.node();
+  };
+
+  const escolherItem = (slug) => {
+    dash.setParams({ item: slug });
+    for (const alvo of document.querySelectorAll('#item')) {
+      alvo.scrollIntoView();
+      dash.setLink('item');
+    }
+  };
+
+  const textoKpi = (nome, campo, fmt) => dash.draw(nome, (el) => {
+    const r = kpi();
+    el.textContent = r && r[campo] != null ? fmt(r[campo]) : '—';
+    if (r) el.dataset.where = `categoria=${r.categoria}`;
+  });
+  textoKpi('lead-preco', 'indice_var30', fmtPct);
+  textoKpi('lead-vendas', 'vendas_var', fmtPct);
+  textoKpi('lead-altas', 'altas', fmtInt);
+  textoKpi('lead-quedas', 'quedas', fmtInt);
+  textoKpi('t-indice', 'indice', (v) => n1.format(v));
+  textoKpi('t-indice-var', 'indice_var30', fmtPct);
+  textoKpi('t-vendas', 'vendas30', (v) => compacto.format(v));
+  textoKpi('t-vendas-var', 'vendas_var', fmtPct);
+  textoKpi('t-platina', 'platina30', (v) => `${compacto.format(v)} p`);
+  textoKpi('t-platina-var', 'platina_var', fmtPct);
+  textoKpi('t-altas', 'altas', fmtInt);
+  textoKpi('t-quedas', 'quedas', fmtInt);
+  textoKpi('t-estaveis', 'estaveis', fmtInt);
+  textoKpi('t-pouco', 'pouco', fmtInt);
+  textoKpi('minimo', 'minimo', fmtInt);
+  textoKpi('limite', 'limite_pct', fmtInt);
+
+  const textoExcluidos = (nome, campo, fmt) => dash.draw(nome, (el) => {
+    const g = dash.data('excluidos');
+    el.textContent = g.status === 'ok' ? fmt(g.data[0][campo]) : '—';
+  });
+  textoExcluidos('excl-qtd', 'registros', fmtInt);
+  textoExcluidos('excl-itens', 'itens', (v) => v || 'nenhum item');
+
+  const nomeCategoria = (el) => {
+    const c = categoriaAtual();
+    el.textContent = c === 'Todas' ? 'todas as categorias' : c;
+  };
+  dash.draw('lead-cat', nomeCategoria);
+  dash.draw('leg-cat', nomeCategoria);
+
+  dash.draw('categoria', (sel) => {
+    const g = dash.data('kpis');
+    const cats = g.status === 'ok' ? g.data.map((r) => r.categoria) : [];
+    sel.replaceChildren(...cats.map((c) => new Option(c)));
+    sel.value = categoriaAtual();
+    sel.onchange = () => dash.setParams({ categoria: sel.value, item: null });
+  });
+
+  dash.draw('periodo', (el) => {
+    const g = dash.data('mercado');
+    if (g.status !== 'ok') { el.textContent = '—'; return; }
+    const dias = d3.extent(g.data, (r) => r.dia);
+    el.textContent = `${fmtDia(new Date(dias[0]))} a ${fmtDiaAno(new Date(dias[1]))}`;
+  });
+
+  dash.draw('g-indice', (el) => {
+    if (!preparar(el, 'mercado')) return;
+    const c = categoriaAtual();
+    const rows = dash.data('mercado').data.filter((r) => r.indice != null);
+    const serie = (nome) => rows.filter((r) => r.categoria === nome).map((r) => ({ t: new Date(r.dia), y: r.indice }));
+    const outras = [...new Set(rows.map((r) => r.categoria))].filter((n) => n !== c);
+    grafLinha(el, {
+      altura: 260, rotulo: 'Índice de preços ao longo do período',
+      pontos: serie(c), contexto: outras.map(serie), ref: 100,
+      fmtY: (v) => n0.format(v), fmtFim: (v) => n1.format(v),
+      dica: (p) => [[c, n1.format(p.y)]],
+    });
+  });
+
+  dash.draw('g-vendas', (el) => {
+    if (!preparar(el, 'mercado')) return;
+    const rows = dash.data('mercado').data.filter((r) => r.categoria === categoriaAtual());
+    grafBarras(el, {
+      altura: 260, rotulo: 'Vendas por dia',
+      pontos: rows.map((r) => ({ t: new Date(r.dia), y: r.vendas, platina: r.platina })),
+      dica: (p) => [['Vendas', fmtInt(p.y)], ['Platina', fmtP(p.platina)]],
+    });
+  });
+
+  const lista = (nome, sinal, cor) => dash.draw(nome, (ul) => {
+    const g = dash.data('resumo');
+    if (g.status !== 'ok') { ul.replaceChildren(); return; }
+    const validos = daCategoria(g.data).filter((r) => r.tendencia !== 'Pouco negociado' && r.var30 != null);
+    const maximo = d3.max(validos, (r) => Math.abs(r.var30)) || 1;
+    const top = validos.filter((r) => r.var30 * sinal > 0).sort((a, b) => (b.var30 - a.var30) * sinal).slice(0, 7);
+    ul.replaceChildren(...top.map((r) => {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.className = 'wm-mov-btn';
+      b.type = 'button';
+      const nomeEl = document.createElement('span');
+      nomeEl.className = 'wm-mov-nome';
+      nomeEl.textContent = r.nome;
+      const trilha = document.createElement('span');
+      trilha.className = 'wm-mov-trilha';
+      const barra = document.createElement('span');
+      barra.className = 'wm-mov-barra';
+      barra.style.width = `${(Math.abs(r.var30) / maximo) * 100}%`;
+      barra.style.background = dash.colors[cor];
+      trilha.append(barra);
+      const val = document.createElement('span');
+      val.className = 'wm-mov-val';
+      val.textContent = fmtPct(r.var30);
+      const preco = document.createElement('span');
+      preco.className = 'wm-mov-preco';
+      preco.textContent = fmtP(r.preco);
+      b.append(nomeEl, trilha, val, preco);
+      b.onclick = () => escolherItem(r.slug);
+      li.append(b);
+      return li;
+    }));
+  });
+  lista('altas', 1, 0);
+  lista('quedas', -1, 1);
+
+  dash.draw('item-sel', (sel) => {
+    const g = dash.data('resumo');
+    const rows = g.status === 'ok' ? [...daCategoria(g.data)].sort((a, b) => a.nome.localeCompare(b.nome)) : [];
+    sel.replaceChildren(...rows.map((r) => new Option(r.nome, r.slug)));
+    sel.value = itemAtual()?.slug ?? '';
+    sel.onchange = () => dash.setParams({ item: sel.value });
+  });
+
+  const textoItem = (nome, campo, fmt) => dash.draw(nome, (el) => {
+    const r = itemAtual();
+    el.textContent = r && r[campo] != null ? fmt(r[campo]) : '—';
+    if (r) el.dataset.where = `slug=${r.slug}`;
+  });
+  textoItem('i-preco', 'preco', fmtP);
+  textoItem('i-var7', 'var7', fmtPct);
+  textoItem('i-var30', 'var30', fmtPct);
+  textoItem('i-var90', 'var90', fmtPct);
+  textoItem('i-vendas', 'vendas30', fmtInt);
+  textoItem('i-venda', 'melhor_venda', fmtP);
+  textoItem('i-compra', 'melhor_compra', fmtP);
+  textoItem('i-spread', 'spread', fmtSpread);
+
+  dash.draw('g-item', (el) => {
+    if (!preparar(el, 'historico', 'resumo')) return;
+    const it = itemAtual();
+    const rs = it ? historicoDe(it.slug) : [];
+    if (rs.length < 2) { el.replaceChildren(); return; }
+    grafLinha(el, {
+      altura: 260, rotulo: `Preço de ${it.nome} ao longo do período`, faixa: true,
+      pontos: rs, fmtY: fmtInt, fmtFim: fmtP,
+      dica: (p) => [['Mediana', fmtP(p.y)], ['Menor', fmtP(p.lo)], ['Maior', fmtP(p.hi)]],
+    });
+  });
+
+  dash.draw('g-item-vendas', (el) => {
+    if (!preparar(el, 'historico', 'resumo')) return;
+    const it = itemAtual();
+    const rs = it ? historicoDe(it.slug) : [];
+    if (rs.length < 2) { el.replaceChildren(); return; }
+    grafBarras(el, {
+      altura: 120, rotulo: `Vendas por dia de ${it.nome}`,
+      pontos: d3.utcDay.range(rs[0].t, d3.utcDay.offset(rs[rs.length - 1].t, 1)).map((t) => ({ t, y: rs.find((p) => +p.t === +t)?.vendas ?? 0 })),
+      dica: (p) => [['Vendas', fmtInt(p.y)]],
+    });
+  });
+
+  const ordem = { col: 'vendas30', dir: -1 };
+  dash.draw('tabela', (tbody) => {
+    const g = dash.data('resumo');
+    if (g.status !== 'ok') { tbody.replaceChildren(); return; }
+    let termo = '';
+    for (const c of document.querySelectorAll('#busca')) termo = c.value.trim().toLowerCase();
+    const comparar = (a, b) => {
+      const x = a[ordem.col], y = b[ordem.col];
+      if (x == null) return y == null ? 0 : 1;
+      if (y == null) return -1;
+      return (typeof x === 'string' ? x.localeCompare(y) : x - y) * ordem.dir;
+    };
+    const rows = daCategoria(g.data).filter((r) => r.nome.toLowerCase().includes(termo)).sort(comparar);
+    tbody.replaceChildren(...rows.map((r) => {
+      const tr = document.createElement('tr');
+      tr.dataset.key = r.slug;
+      const celula = (texto, classe) => {
+        const td = document.createElement('td');
+        if (classe) td.className = classe;
+        td.textContent = texto;
+        return td;
+      };
+      const nome = celula('', 'wm-esq');
+      const b = document.createElement('button');
+      b.className = 'wm-link';
+      b.type = 'button';
+      b.textContent = r.nome;
+      b.onclick = () => escolherItem(r.slug);
+      nome.append(b);
+      const tend = celula('', 'wm-esq');
+      const pill = document.createElement('span');
+      pill.className = 'wm-pill';
+      pill.dataset.t = r.tendencia;
+      if (r.tendencia === 'Alta') pill.style.setProperty('--wm-cor', dash.colors[0]);
+      if (r.tendencia === 'Queda') pill.style.setProperty('--wm-cor', dash.colors[1]);
+      pill.textContent = r.tendencia;
+      tend.append(pill);
+      const spark = celula('', 'wm-sec');
+      spark.append(faisca(historicoDe(r.slug)));
+      tr.append(
+        nome, tend, celula(fmtP(r.preco)), celula(fmtPct(r.var7), 'wm-sec'), celula(fmtPct(r.var30)),
+        celula(fmtPct(r.var90), 'wm-sec'), celula(fmtInt(r.vendas30)), celula(fmtP(r.melhor_venda), 'wm-sec'),
+        celula(fmtP(r.melhor_compra), 'wm-sec'), celula(fmtSpread(r.spread), 'wm-sec'), spark,
+      );
+      return tr;
+    }));
+  });
+
+  for (const c of document.querySelectorAll('#busca')) c.addEventListener('input', () => dash.draw('tabela'));
+  for (const b of document.querySelectorAll('.wm-ord[data-col]')) {
+    b.addEventListener('click', () => {
+      const col = b.dataset.col;
+      if (ordem.col === col) ordem.dir *= -1;
+      else { ordem.col = col; ordem.dir = col === 'nome' || col === 'tendencia' ? 1 : -1; }
+      for (const th of document.querySelectorAll('#tab-itens th')) th.removeAttribute('aria-sort');
+      b.closest('th')?.setAttribute('aria-sort', ordem.dir === 1 ? 'ascending' : 'descending');
+      dash.draw('tabela');
+    });
+  }
+  for (const k of document.querySelectorAll('[data-wm-cor]')) k.style.background = dash.colors[Number(k.dataset.wmCor)];
+
+  for (const named of document.querySelectorAll('[id]')) {
+    if (location.hash && named.id === location.hash.slice(1)) {
+      requestAnimationFrame(() => named.scrollIntoView());
+      break;
+    }
+  }
+</script>
